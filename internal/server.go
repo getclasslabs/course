@@ -1,8 +1,8 @@
 package internal
 
 import (
+	"github.com/getclasslabs/course/internal/handler"
 	"github.com/getclasslabs/go-tools/pkg/request"
-	"github.com/getclasslabs/{apiname}/internal/handler"
 	"github.com/gorilla/mux"
 	"net/http"
 )

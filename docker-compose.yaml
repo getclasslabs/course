@@ -1,8 +1,8 @@
 version: "3.8"
 
 services:
-  {apiname}:
-    image: getclass/{apiname}:latest
+  course:
+    image: getclass/course:latest
     deploy:
       replicas: 1
       update_config:
@@ -11,7 +11,7 @@ services:
     networks:
       main:
         aliases:
-          - {apiname}
+          - course
 networks:
   main:
     external: true

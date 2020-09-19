@@ -2,7 +2,7 @@ package repository
 
 import (
 "github.com/getclasslabs/go-tools/pkg/db"
-"github.com/getclasslabs/{apiname}/internal/config"
+"github.com/getclasslabs/course/internal/config"
 _ "github.com/go-sql-driver/mysql"
 )
 

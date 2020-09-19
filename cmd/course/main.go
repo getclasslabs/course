@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/getclasslabs/{apiname}/internal"
-	"github.com/getclasslabs/{apiname}/internal/config"
-	"github.com/getclasslabs/{apiname}/internal/repository"
+	"github.com/getclasslabs/course/internal"
+	"github.com/getclasslabs/course/internal/config"
+	"github.com/getclasslabs/course/internal/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	jaegerConf "github.com/uber/jaeger-client-go/config"
@@ -15,7 +15,7 @@ import (
 	"os"
 )
 
-const name = "{apiname}"
+const name = "course"
 
 func main() {
 
