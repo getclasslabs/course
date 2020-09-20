@@ -12,6 +12,9 @@ CREATE TABLE course (
     category_id int(6),
     max_students int(4),
     classes int(4),
+    start_day date,
+    created_at timestamp default CURRENT_TIMESTAMP,
+    updated_at timestamp ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (teacher_id) REFERENCES teacher(id),
     FOREIGN KEY (category_id) REFERENCES category(id)
 );
@@ -29,6 +32,7 @@ CREATE TABLE rescheduled_class (
     course_id INT(6),
     class_date_id INT(6),
     datetime DATETIME,
+    created_at timestamp default CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES course(id),
     FOREIGN KEY (class_date_id) REFERENCES class_date(id)
 );
