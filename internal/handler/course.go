@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"github.com/getclasslabs/course/internal/domain"
 	"github.com/getclasslabs/course/internal/services/course"
 	"github.com/getclasslabs/go-tools/pkg/request"
 	"github.com/getclasslabs/go-tools/pkg/tracer"
@@ -26,7 +27,7 @@ func CourseCRUD(w http.ResponseWriter, r *http.Request) {
 	var err error
 	email := r.Header.Get("X-Consumer-Username")
 
-	c := course.Course{}
+	c := domain.Course{}
 	err = json.NewDecoder(r.Body).Decode(&c)
 	if err != nil {
 		i.Span.SetTag("read", http.StatusBadRequest)
@@ -35,31 +36,32 @@ func CourseCRUD(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.Email = email
+	service := course.Course{Domain: &c}
 
 	switch r.Method {
 	case http.MethodPost:
-		err = c.Create(i)
+		err = service.Create(i)
 		break
 	case http.MethodPut:
 		err = getID(r, &c)
 		if err != nil{
 			break
 		}
-		err = c.Edit(i)
+		err = service.Edit(i)
 		break
 	case http.MethodDelete:
 		err = getID(r, &c)
 		if err != nil{
 			break
 		}
-		err = c.Delete(i)
+		err = service.Delete(i)
 		break
 	case http.MethodGet:
 		err = getID(r, &c)
 		if err != nil{
 			break
 		}
-		err = c.Get(i)
+		err = service.Get(i)
 		break
 	}
 	
@@ -76,7 +78,7 @@ func CourseCRUD(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getID(r *http.Request, c *course.Course) error {
+func getID(r *http.Request, c *domain.Course) error {
 	courseID := mux.Vars(r)["id"]
 	if len(courseID) == 0 {
 		err := errors.New(emptyCourseID)

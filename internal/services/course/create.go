@@ -1,25 +1,25 @@
 package course
 
-import "github.com/getclasslabs/go-tools/pkg/tracer"
+import (
+	"github.com/getclasslabs/course/internal/domain"
+	"github.com/getclasslabs/course/internal/repository/course"
+	"github.com/getclasslabs/go-tools/pkg/tracer"
+)
 
-type Course struct {
-	Email string
-	ID int
-	Name string `json:"name"`
-	CategoryID int `json:"categoryID"`
-	MaxStudents int `json:"maxStudents"`
-	Classes int `json:"numClasses"`
-	Periods []Period `json:"periods"`
+type Course struct{
+	Domain *domain.Course
 }
-
-type Period struct {
-	Day int `json:"weekDay"`
-	Hour int `json:"hour"`
-}
-
 
 func (c *Course) Create(i *tracer.Infos) error {
-	
+	i.TraceIt("creating service")
+	defer i.Span.Finish()
+
+	cRepo := course.NewCourse()
+	err := cRepo.Create(i, c.Domain)
+	if err != nil {
+		i.LogError(err)
+		return err
+	}
 	return nil
 }
 
