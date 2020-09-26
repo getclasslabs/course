@@ -14,11 +14,13 @@ import (
 
 const (
 	emptyCourseID = "empty course id"
-	badRequest = "badRequest"
+	badRequest    = "badRequest"
 )
 
 //CourseCRUD Handles course's CRUD
 func CourseCRUD(w http.ResponseWriter, r *http.Request) {
+	var status = 0
+
 	i := r.Context().Value(request.ContextKey).(*tracer.Infos)
 
 	i.TraceIt(spanName)
@@ -41,31 +43,34 @@ func CourseCRUD(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		err = service.Create(i)
+		if err != nil {
+			status = http.StatusCreated
+		}
 		break
 	case http.MethodPut:
 		err = getID(r, &c)
-		if err != nil{
+		if err != nil {
 			break
 		}
 		err = service.Edit(i)
 		break
 	case http.MethodDelete:
 		err = getID(r, &c)
-		if err != nil{
+		if err != nil {
 			break
 		}
 		err = service.Delete(i)
 		break
 	case http.MethodGet:
 		err = getID(r, &c)
-		if err != nil{
+		if err != nil {
 			break
 		}
 		err = service.Get(i)
 		break
 	}
-	
-	if err != nil{
+
+	if err != nil {
 		switch err.Error() {
 		case emptyCourseID:
 		case badRequest:
@@ -74,6 +79,10 @@ func CourseCRUD(w http.ResponseWriter, r *http.Request) {
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
+	}
+
+	if status > 0 {
+		w.WriteHeader(status)
 	}
 
 }
@@ -85,7 +94,7 @@ func getID(r *http.Request, c *domain.Course) error {
 		return err
 	}
 	id, err := strconv.Atoi(courseID)
-	if err != nil{
+	if err != nil {
 		err = errors.New(badRequest)
 		return err
 	}

@@ -5,7 +5,7 @@ import (
 	"github.com/getclasslabs/go-tools/pkg/tracer"
 )
 
-func GetCategories(i *tracer.Infos) ([]map[string]interface{}, error){
+func GetCategories(i *tracer.Infos) ([]map[string]interface{}, error) {
 	i.TraceIt("getting category")
 	defer i.Span.Finish()
 

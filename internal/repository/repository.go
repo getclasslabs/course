@@ -1,12 +1,12 @@
 package repository
 
 import (
-"github.com/getclasslabs/go-tools/pkg/db"
-"github.com/getclasslabs/course/internal/config"
-_ "github.com/go-sql-driver/mysql"
+	"github.com/getclasslabs/course/internal/config"
+	"github.com/getclasslabs/go-tools/pkg/db"
+	_ "github.com/go-sql-driver/mysql"
 )
 
-func Start(){
+func Start() {
 	Db = &db.MySQL{}
 	Db.Connect(config.Config.Mysql)
 }

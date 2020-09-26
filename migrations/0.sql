@@ -1,38 +1,40 @@
 USE userdb;
 
 CREATE TABLE category (
-    id INT(6) AUTO_INCREMENT PRIMARY KEY,
-    name varchar(100)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100)
 );
 
 CREATE TABLE course (
-    id INT(6) AUTO_INCREMENT PRIMARY KEY,
-    teacher_id INT(6),
-    name varchar(100),
-    category_id int(6),
-    max_students int(4),
-    classes int(4),
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id INT,
+    name VARCHAR(100),
+    description VARCHAR(500),
+    category_id INT,
+    max_students INT,
+    classes INT,
     start_day date,
-    created_at timestamp default CURRENT_TIMESTAMP,
-    updated_at timestamp ON UPDATE CURRENT_TIMESTAMP,
+    type VARCHAR(10),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (teacher_id) REFERENCES teacher(id),
     FOREIGN KEY (category_id) REFERENCES category(id)
 );
 
 CREATE TABLE class_date (
-    id INT(6) AUTO_INCREMENT PRIMARY KEY,
-    course_id INT(6),
-    day int(1),
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course_id INT,
+    day INT,
     hour TIME,
     FOREIGN KEY (course_id) REFERENCES course(id)
 );
 
 CREATE TABLE rescheduled_class (
-    id INT(6) AUTO_INCREMENT PRIMARY KEY,
-    course_id INT(6),
-    class_date_id INT(6),
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course_id INT,
+    class_date_id INT,
     datetime DATETIME,
-    created_at timestamp default CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES course(id),
     FOREIGN KEY (class_date_id) REFERENCES class_date(id)
 );

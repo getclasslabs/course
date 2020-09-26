@@ -25,7 +25,7 @@ func (c Category) GetAll(i *tracer.Infos) ([]map[string]interface{}, error) {
 	query := "SELECT * FROM category"
 
 	result, err := c.db.Fetch(i, query)
-	if err != nil{
+	if err != nil {
 		i.LogError(err)
 		return nil, err
 	}
