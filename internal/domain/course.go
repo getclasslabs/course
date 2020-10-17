@@ -1,19 +1,21 @@
 package domain
 
 type Course struct {
-	Email       string
-	ID          int
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	CategoryID  int      `json:"categoryID"`
-	StartDay    string   `json:"startDay"`
-	MaxStudents int      `json:"maxStudents"`
-	Classes     int      `json:"numClasses"`
-	Periods     []Period `json:"periods"`
-	Type        string   `json:"type"`
-}
-
-type Period struct {
-	Day  int `json:"weekDay"`
-	Hour int `json:"hour"`
+	Email                   string  `json:"email,omitempty"`
+	ID                      int     `json:"id,omitempty"`
+	Name                    string  `json:"name"`
+	Description             string  `json:"description"`
+	CategoryID              int     `json:"categoryID"`
+	MaxStudents             int     `json:"maxStudents"`
+	Classes                 int     `json:"classes"`
+	Periods                 string  `json:"periods"`
+	Price                   float64 `json:"price"`
+	StartDay                string  `json:"startDay"`
+	Type                    string  `json:"type"`
+	Place                   string  `json:"place"`
+	AllowStudentsAfterStart bool    `json:"allowStudentsAfterStart"`
+	ClassOpen               bool    `json:"classOpen"`
+	ClassesGiven			int 	`json:"classesGiven"`
+	CreatedAt               string  `json:"createdAt"`
+	ImagePath				string 	`json:"imagePath"`
 }

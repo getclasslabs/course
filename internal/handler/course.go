@@ -31,7 +31,7 @@ func CourseCRUD(w http.ResponseWriter, r *http.Request) {
 
 	c := domain.Course{}
 	err = json.NewDecoder(r.Body).Decode(&c)
-	if err != nil {
+	if err != nil && err.Error() != "EOF" {
 		i.Span.SetTag("read", http.StatusBadRequest)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -44,8 +44,12 @@ func CourseCRUD(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		err = service.Create(i)
 		if err != nil {
-			status = http.StatusCreated
+			status = http.StatusInternalServerError
+			break
 		}
+		status = http.StatusCreated
+		ret, _ := json.Marshal(c)
+		_, _ = w.Write(ret)
 		break
 	case http.MethodPut:
 		err = getID(r, &c)
@@ -66,7 +70,13 @@ func CourseCRUD(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			break
 		}
-		err = service.Get(i)
+		response, err := service.Get(i)
+		if err != nil{
+			status = http.StatusInternalServerError
+			break
+		}
+		ret, _ := json.Marshal(response)
+		_, _ = w.Write(ret)
 		break
 	}
 
