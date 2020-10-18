@@ -72,6 +72,10 @@ func CourseCRUD(w http.ResponseWriter, r *http.Request) {
 		}
 		response, err := service.Get(i)
 		if err != nil{
+			if err.Error() == "no course found" {
+				status = http.StatusNotFound
+				break
+			}
 			status = http.StatusInternalServerError
 			break
 		}

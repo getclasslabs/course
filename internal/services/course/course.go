@@ -25,11 +25,20 @@ func (c *Course) Create(i *tracer.Infos) error {
 }
 
 func (c *Course) Edit(i *tracer.Infos) error {
-	return nil
+	i.TraceIt("edit service")
+	defer i.Span.Finish()
+
+	cRepo := course.NewCourse()
+
+	return cRepo.Update(i, c.Domain)
 }
 
 func (c *Course) Delete(i *tracer.Infos) error {
-	return nil
+	i.TraceIt("edit service")
+	defer i.Span.Finish()
+
+	cRepo := course.NewCourse()
+	return cRepo.Delete(i, c.Domain.ID, c.Domain.Email)
 }
 
 func (c *Course) Get(i *tracer.Infos) (*domain.Course, error) {

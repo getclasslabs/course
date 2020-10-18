@@ -98,6 +98,12 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 		return nil, err
 	}
 
+	if len(result) == 0{
+		err = errors.New("no course found")
+		i.LogError(err)
+		return nil, err
+	}
+
 	result["classOpen"] = result["classOpen"].(int64) != 0
 	result["active"] = result["active"].(int64) != 0
 	result["price"], err = strconv.ParseFloat(result["price"].(string), 64)
@@ -120,4 +126,65 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 	}
 
 	return &course, nil
+}
+
+func (c Course) Update(i *tracer.Infos, course *domain.Course) error {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	query := "UPDATE course SET " +
+		"	name = ?," +
+		"	description = ?," +
+		"	category_id = ?," +
+		"	max_students = ?," +
+		"	classes = ?," +
+		"	periods = ?," +
+		"	price = ?," +
+		"	start_day = FROM_UNIXTIME(?)," +
+		"	type = ?," +
+		"	place = ? " +
+		"WHERE " +
+		"	id = ? AND" +
+		"	teacher_id = (SELECT t.id FROM teacher t INNER JOIN users u on u.id = t.user_id where u.email = ?)"
+
+	_, err := c.db.Update(i, query,
+		course.Name,
+		course.Description,
+		course.CategoryID,
+		course.MaxStudents,
+		course.Classes,
+		course.Periods,
+		course.Price,
+		course.StartDay,
+		course.Type,
+		course.Place,
+		course.ID,
+		course.Email)
+
+	if err != nil {
+		i.LogError(err)
+		return err
+	}
+
+	return nil
+}
+
+func (c Course) Delete(i *tracer.Infos,  id int, email string) error {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	query := "UPDATE course SET " +
+		"	active = false " +
+		"WHERE " +
+		"	id = ? AND " +
+		"	teacher_id = (SELECT t.id FROM teacher t INNER JOIN users u on u.id = t.user_id where u.email = ?)"
+
+	_, err := c.db.Update(i, query, id, email)
+
+	if err != nil {
+		i.LogError(err)
+		return err
+	}
+
+	return nil
 }
