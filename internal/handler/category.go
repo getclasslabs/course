@@ -25,3 +25,21 @@ func GetCategory(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(ret)
 
 }
+
+func CategorySearch(w http.ResponseWriter, r *http.Request) {
+	i := r.Context().Value(request.ContextKey).(*tracer.Infos)
+
+	i.TraceIt(spanName)
+	defer i.Span.Finish()
+
+	name := r.URL.Query().Get("name")
+
+	categories, err := category.Search(i, name)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	ret, _ := json.Marshal(categories)
+
+	_, _ = w.Write(ret)
+}
