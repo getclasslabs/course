@@ -6,17 +6,19 @@ type Course struct {
 	Name                    string  `json:"name"`
 	Description             string  `json:"description"`
 	CategoryID              int     `json:"categoryID"`
-	MaxStudents             int     `json:"maxStudents"`
-	Classes                 int     `json:"classes"`
-	Periods                 string  `json:"periods"`
+	CategoryName            string  `json:"categoryName,omitempty"`
+	TeacherName				string  `json:"teacherName,omitempty"`
+	MaxStudents             int     `json:"maxStudents,omitempty"`
+	Classes                 int     `json:"classes,omitempty"`
+	Periods                 string  `json:"periods,omitempty"`
 	Price                   float64 `json:"price"`
 	StartDay                string  `json:"startDay"`
 	Type                    string  `json:"type"`
-	Place                   string  `json:"place"`
-	AllowStudentsAfterStart bool    `json:"allowStudentsAfterStart"`
-	ClassOpen               bool    `json:"classOpen"`
-	ClassesGiven			int 	`json:"classesGiven"`
+	Place                   string  `json:"place,omitempty"`
+	AllowStudentsAfterStart bool    `json:"allowStudentsAfterStart,omitempty"`
+	ClassOpen               bool    `json:"classOpen,omitempty"`
+	ClassesGiven			int 	`json:"classesGiven,omitempty"`
 	CreatedAt               string  `json:"createdAt"`
-	Active                  bool    `json:"active"`
+	Active                  bool    `json:"active,omitempty"`
 	ImagePath				string 	`json:"imagePath"`
 }

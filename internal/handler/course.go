@@ -113,3 +113,27 @@ func getID(r *http.Request, c *domain.Course) error {
 	c.ID = id
 	return nil
 }
+
+
+func Search(w http.ResponseWriter, r *http.Request) {
+	i := r.Context().Value(request.ContextKey).(*tracer.Infos)
+	i.TraceIt(spanName)
+	defer i.Span.Finish()
+
+	name := r.URL.Query().Get("name")
+
+	courses, err := course.Search(i, name)
+	if err != nil{
+		if err.Error() == notFound{
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	ret, _ := json.Marshal(courses)
+	_, _ = w.Write(ret)
+}
+
+
