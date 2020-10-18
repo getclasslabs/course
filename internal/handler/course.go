@@ -15,6 +15,7 @@ import (
 const (
 	emptyCourseID = "empty course id"
 	badRequest    = "badRequest"
+	notFound      = "no course found"
 )
 
 //CourseCRUD Handles course's CRUD
@@ -44,7 +45,6 @@ func CourseCRUD(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		err = service.Create(i)
 		if err != nil {
-			status = http.StatusInternalServerError
 			break
 		}
 		status = http.StatusCreated
@@ -72,11 +72,6 @@ func CourseCRUD(w http.ResponseWriter, r *http.Request) {
 		}
 		response, err := service.Get(i)
 		if err != nil{
-			if err.Error() == "no course found" {
-				status = http.StatusNotFound
-				break
-			}
-			status = http.StatusInternalServerError
 			break
 		}
 		ret, _ := json.Marshal(response)
@@ -86,6 +81,9 @@ func CourseCRUD(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		switch err.Error() {
+		case notFound:
+			w.WriteHeader(http.StatusNotFound)
+			return
 		case emptyCourseID:
 		case badRequest:
 			w.WriteHeader(http.StatusBadRequest)
