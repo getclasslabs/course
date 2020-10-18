@@ -12,9 +12,9 @@ type Configuration struct {
 }
 
 type Mysql struct {
-	Host string `yaml:"host"`
-	Port string `yaml:"port"`
-	User string `yaml:"user"`
+	Host     string `yaml:"host"`
+	Port     string `yaml:"port"`
+	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 	Database string `yaml:"database"`
 }
