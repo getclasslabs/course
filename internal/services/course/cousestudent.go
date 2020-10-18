@@ -7,5 +7,5 @@ func isRegistered(email string, courseID int) (bool, error){
 }
 
 func GetCourse(email string, courseID int) (*domain.Course, error) {
-	return false, nil
+	return nil, nil
 }

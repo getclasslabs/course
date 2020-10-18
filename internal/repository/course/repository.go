@@ -82,13 +82,15 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 		"	start_day as startDay," +
 		"	type," +
 		"	place," +
-		"	class_open," +
-		"	classes_given," +
-		"	created_at as createdAt " +
+		"	class_open as classOpen," +
+		"	classes_given as classesGiven," +
+		"	created_at as createdAt, " +
+		"	active " +
 		"FROM course " +
 		"WHERE " +
-		"	id = ? AND" +
-		"	teacher_id = (SELECT t.id FROM teacher t INNER JOIN users u on u.id = t.user_id where u.email = ?)"
+		"	id = ? AND " +
+		"	teacher_id = (SELECT t.id FROM teacher t INNER JOIN users u on u.id = t.user_id where u.email = ?) AND " +
+		"	active = true"
 
 	result, err := c.db.Get(i, query, id, email)
 	if err != nil {
@@ -96,6 +98,8 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 		return nil, err
 	}
 
+	result["classOpen"] = result["classOpen"].(int64) != 0
+	result["active"] = result["active"].(int64) != 0
 	result["price"], err = strconv.ParseFloat(result["price"].(string), 64)
 	if err != nil {
 		i.LogError(err)

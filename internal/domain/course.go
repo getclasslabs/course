@@ -17,5 +17,6 @@ type Course struct {
 	ClassOpen               bool    `json:"classOpen"`
 	ClassesGiven			int 	`json:"classesGiven"`
 	CreatedAt               string  `json:"createdAt"`
+	Active                  bool    `json:"active"`
 	ImagePath				string 	`json:"imagePath"`
 }

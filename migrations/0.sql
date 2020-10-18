@@ -20,6 +20,7 @@ CREATE TABLE course (
     place VARCHAR(200) DEFAULT NULL,
     class_open BOOLEAN DEFAULT FALSE,
     classes_given INT DEFAULT 0,
+    active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (teacher_id) REFERENCES teacher(id),
