@@ -112,14 +112,8 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 		return nil, err
 	}
 
-	jsonResult, err := json.Marshal(result)
-	if err != nil {
-		i.LogError(err)
-		return nil, err
-	}
-
 	course := domain.Course{}
-	err = json.Unmarshal(jsonResult, &course)
+	err = mapper(result, &course)
 	if err != nil {
 		i.LogError(err)
 		return nil, err
@@ -188,3 +182,69 @@ func (c Course) Delete(i *tracer.Infos,  id int, email string) error {
 
 	return nil
 }
+
+func (c Course) Search(i *tracer.Infos, name string) ([]domain.Course, error) {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	query := "SELECT " +
+		"	c.name as name," +
+		"	c.description as description," +
+		"	ca.name as categoryName," +
+		"	ca.id as categoryID," +
+		"	CONCAT(u.first_name, ' ', u.last_name) as teacherName," +
+		"	c.start_day as startDay," +
+		"	c.price," +
+		"	c.type, " +
+		"	c.created_at as createdAt " +
+		"FROM course c " +
+		"INNER JOIN category ca ON ca.id = c.category_id " +
+		"INNER JOIN teacher te ON te.id = c.teacher_id " +
+		"INNER JOIN users u ON u.id = te.user_id " +
+		"WHERE " +
+		"	soundex(c.name) = soundex(?) AND " +
+		"	active is true"
+
+	result, err := c.db.Fetch(i, query, name)
+	if err != nil {
+		i.LogError(err)
+		return nil, err
+	}
+
+	if len(result) == 0{
+		err = errors.New("no course found")
+		i.LogError(err)
+		return nil, err
+	}
+
+	for _, c := range result {
+		c["price"], err = strconv.ParseFloat(c["price"].(string), 64)
+		if err != nil {
+			i.LogError(err)
+			return nil, err
+		}
+	}
+	var courses []domain.Course
+	err = mapper(result, &courses)
+	if err != nil {
+		i.LogError(err)
+		return nil, err
+	}
+
+	return courses, nil
+}
+
+func mapper(data interface{}, to interface{}) error {
+	jsonResult, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(jsonResult, to)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+
