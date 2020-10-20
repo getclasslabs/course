@@ -8,10 +8,15 @@ type Course struct {
 	CategoryID              int     `json:"categoryID"`
 	CategoryName            string  `json:"categoryName,omitempty"`
 	TeacherName				string  `json:"teacherName,omitempty"`
+	TeacherNick				string  `json:"teacherNick,omitempty"`
+	TeacherDescription		string  `json:"teacherDescription,omitempty"`
+	TeacherImage			string  `json:"teacherImage,omitempty"`
+	TeacherId				int		`json:"teacher_id,omitempty"`
 	MaxStudents             int     `json:"maxStudents,omitempty"`
 	Classes                 int     `json:"classes,omitempty"`
 	Periods                 string  `json:"periods,omitempty"`
 	Price                   float64 `json:"price"`
+	Payment					string	`json:"payment"`
 	StartDay                string  `json:"startDay"`
 	Type                    string  `json:"type"`
 	Place                   string  `json:"place,omitempty"`

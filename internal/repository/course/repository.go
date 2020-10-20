@@ -24,11 +24,11 @@ func NewCourse() *Course {
 
 func (c Course) Create(i *tracer.Infos, course *domain.Course) (int, error) {
 	q := "INSERT INTO course (teacher_id, name, description, category_id, max_students, classes, periods, price, " +
-		"start_day, type)" +
+		"start_day, type, place, payment, allowStudentsAfterStart)" +
 		"VALUES ((SELECT t.id" +
 		"         FROM teacher t" +
 		"                  INNER JOIN users u on u.id = t.user_id" +
-		"         where u.email = ?), ?, ?, ?, ?, ?, ?, ?, FROM_UNIXTIME(?), ?);"
+		"         where u.email = ?), ?, ?, ?, ?, ?, ?, ?, FROM_UNIXTIME(?), ?, ?, ?, ?);"
 
 	_, err := c.db.Insert(i, q,
 		course.Email,
@@ -41,6 +41,9 @@ func (c Course) Create(i *tracer.Infos, course *domain.Course) (int, error) {
 		course.Price,
 		course.StartDay,
 		course.Type,
+		course.Place,
+		course.Payment,
+		course.AllowStudentsAfterStart,
 		)
 
 	if err != nil {
@@ -71,9 +74,10 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 	defer i.Span.Finish()
 
 	query := "SELECT " +
-		"	id," +
+		"	c.id," +
 		"	name," +
-		"	description," +
+		"	teacher_id," +
+		"	c.description," +
 		"	category_id as categoryID," +
 		"	max_students as maxStudents," +
 		"	classes," +
@@ -82,13 +86,21 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 		"	start_day as startDay," +
 		"	type," +
 		"	place," +
+		"	allowStudentsAfterStart," +
+		"	payment," +
 		"	class_open as classOpen," +
 		"	classes_given as classesGiven," +
 		"	created_at as createdAt, " +
-		"	active " +
-		"FROM course " +
+		"	active," +
+		"	CONCAT(ut.first_name, ' ', ut.last_name) as teacherName," +
+		"	ut.description as teacherDescription," +
+		"	ut.photo_path as teacherImage, " +
+		"	ut.nickname as teacherNick " +
+		"FROM course c " +
+		"INNER JOIN teacher tt ON tt.id = teacher_id " +
+		"INNER JOIN users ut ON ut.id = tt.user_id " +
 		"WHERE " +
-		"	id = ? AND " +
+		"	c.id = ? AND " +
 		"	teacher_id = (SELECT t.id FROM teacher t INNER JOIN users u on u.id = t.user_id where u.email = ?) AND " +
 		"	active = true"
 
@@ -110,6 +122,12 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 	if err != nil {
 		i.LogError(err)
 		return nil, err
+	}
+
+	if result["allowStudentsAfterStart"].(int64) == 1 {
+		result["allowStudentsAfterStart"] = true
+	} else {
+		result["allowStudentsAfterStart"] = false
 	}
 
 	course := domain.Course{}
@@ -136,7 +154,9 @@ func (c Course) Update(i *tracer.Infos, course *domain.Course) error {
 		"	price = ?," +
 		"	start_day = FROM_UNIXTIME(?)," +
 		"	type = ?," +
-		"	place = ? " +
+		"	place = ?," +
+		"	payment = ?," +
+		"	allowStudentsAfterStart = ? " +
 		"WHERE " +
 		"	id = ? AND" +
 		"	teacher_id = (SELECT t.id FROM teacher t INNER JOIN users u on u.id = t.user_id where u.email = ?)"
@@ -152,6 +172,8 @@ func (c Course) Update(i *tracer.Infos, course *domain.Course) error {
 		course.StartDay,
 		course.Type,
 		course.Place,
+		course.Payment,
+		course.AllowStudentsAfterStart,
 		course.ID,
 		course.Email)
 
