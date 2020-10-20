@@ -74,10 +74,10 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 	defer i.Span.Finish()
 
 	query := "SELECT " +
-		"	c.id," +
+		"	id," +
 		"	name," +
 		"	teacher_id," +
-		"	c.description," +
+		"	description," +
 		"	category_id as categoryID," +
 		"	max_students as maxStudents," +
 		"	classes," +
@@ -91,16 +91,10 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 		"	class_open as classOpen," +
 		"	classes_given as classesGiven," +
 		"	created_at as createdAt, " +
-		"	active," +
-		"	CONCAT(ut.first_name, ' ', ut.last_name) as teacherName," +
-		"	ut.description as teacherDescription," +
-		"	ut.photo_path as teacherImage, " +
-		"	ut.nickname as teacherNick " +
-		"FROM course c " +
-		"INNER JOIN teacher tt ON tt.id = teacher_id " +
-		"INNER JOIN users ut ON ut.id = tt.user_id " +
+		"	active " +
+		"FROM course " +
 		"WHERE " +
-		"	c.id = ? AND " +
+		"	id = ? AND " +
 		"	teacher_id = (SELECT t.id FROM teacher t INNER JOIN users u on u.id = t.user_id where u.email = ?) AND " +
 		"	active = true"
 
