@@ -1,7 +1,7 @@
 package category
 
 import (
-	"errors"
+	"github.com/getclasslabs/course/internal/config"
 	"github.com/getclasslabs/course/internal/repository"
 	"github.com/getclasslabs/go-tools/pkg/db"
 	"github.com/getclasslabs/go-tools/pkg/tracer"
@@ -34,22 +34,51 @@ func (c Category) GetAll(i *tracer.Infos) ([]map[string]interface{}, error) {
 	return result, nil
 }
 
-func (c Category) Search(i *tracer.Infos, name string) ([]map[string]interface{}, error){
+func (c Category) Search(i *tracer.Infos, name string, page int) ([]map[string]interface{}, error){
 	i.TraceIt(c.traceName)
 	defer i.Span.Finish()
 
-	query := "SELECT id, name FROM category where soundex(name) = soundex(?)"
-	result, err := c.db.Fetch(i, query, name)
+	limit := config.Config.SearchLimit
+	offset := (page - 1) * limit
+
+	query := "SELECT " +
+		"	c.id as id," +
+		"	c.name as name," +
+		"	c.description as description," +
+		"	ca.name as categoryName," +
+		"	ca.id as categoryID," +
+		"	c.start_day as startDay," +
+		"	c.price," +
+		"	c.type, " +
+		"	c.created_at as createdAt " +
+		"FROM category ca " +
+		"INNER JOIN course c ON ca.id = c.category_id " +
+		"WHERE soundex(ca.name) = soundex(?) " +
+		"LIMIT ? " +
+		"OFFSET ?"
+	result, err := c.db.Fetch(i, query, name, limit, offset)
 	if err != nil {
 		i.LogError(err)
 		return nil, err
 	}
 
-	if len(result) == 0 {
-		err = errors.New("no category found")
+	return result, nil
+}
+
+func (c Category) GetNextPageCategory(i *tracer.Infos, name string) (map[string]interface{}, error) {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	q := "SELECT " +
+		"	count(c.id) as count " +
+		"FROM category ca " +
+		"INNER JOIN course c ON ca.id = c.category_id " +
+		"WHERE soundex(ca.name) = soundex(?) "
+	result, err := c.db.Get(i, q, name)
+
+	if err != nil {
 		i.LogError(err)
 		return nil, err
 	}
-
 	return result, nil
 }

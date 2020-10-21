@@ -121,8 +121,13 @@ func Search(w http.ResponseWriter, r *http.Request) {
 	defer i.Span.Finish()
 
 	name := r.URL.Query().Get("name")
+	page := r.URL.Query().Get("page")
 
-	courses, err := course.Search(i, name)
+	if page == "" {
+		page = "1"
+	}
+
+	courses, err := course.Search(i, name, page)
 	if err != nil{
 		if err.Error() == notFound{
 			w.WriteHeader(http.StatusNotFound)
