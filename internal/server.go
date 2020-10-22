@@ -37,4 +37,6 @@ func (s *Server) serve() {
 	//Student Course
 	s.Router.Path("/s/{id}").HandlerFunc(request.PreRequest(handler.CourseStudent)).Methods(http.MethodGet)
 
+	s.Router.PathPrefix("/category/images/").Handler(http.StripPrefix("/category/images/",
+		http.FileServer(http.Dir("./category_photos/"))))
 }
