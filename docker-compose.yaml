@@ -8,6 +8,8 @@ services:
       update_config:
         parallelism: 1
         order: start-first
+    volumes:
+      - ./category_photos/:/category_photos/
     networks:
       main:
         aliases:

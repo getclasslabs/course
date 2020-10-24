@@ -33,8 +33,13 @@ func CategorySearch(w http.ResponseWriter, r *http.Request) {
 	defer i.Span.Finish()
 
 	name := r.URL.Query().Get("name")
+	page := r.URL.Query().Get("page")
 
-	categories, err := category.Search(i, name)
+	if page == "" {
+		page = "1"
+	}
+
+	categories, err := category.Search(i, name, page)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

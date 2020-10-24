@@ -3,6 +3,7 @@ package course
 import (
 	"encoding/json"
 	"errors"
+	"github.com/getclasslabs/course/internal/config"
 	"github.com/getclasslabs/course/internal/domain"
 	"github.com/getclasslabs/course/internal/repository"
 	"github.com/getclasslabs/go-tools/pkg/db"
@@ -24,11 +25,11 @@ func NewCourse() *Course {
 
 func (c Course) Create(i *tracer.Infos, course *domain.Course) (int, error) {
 	q := "INSERT INTO course (teacher_id, name, description, category_id, max_students, classes, periods, price, " +
-		"start_day, type)" +
+		"start_day, type, place, payment, allowStudentsAfterStart)" +
 		"VALUES ((SELECT t.id" +
 		"         FROM teacher t" +
 		"                  INNER JOIN users u on u.id = t.user_id" +
-		"         where u.email = ?), ?, ?, ?, ?, ?, ?, ?, FROM_UNIXTIME(?), ?);"
+		"         where u.email = ?), ?, ?, ?, ?, ?, ?, ?, FROM_UNIXTIME(?), ?, ?, ?, ?);"
 
 	_, err := c.db.Insert(i, q,
 		course.Email,
@@ -41,6 +42,9 @@ func (c Course) Create(i *tracer.Infos, course *domain.Course) (int, error) {
 		course.Price,
 		course.StartDay,
 		course.Type,
+		course.Place,
+		course.Payment,
+		course.AllowStudentsAfterStart,
 		)
 
 	if err != nil {
@@ -73,6 +77,7 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 	query := "SELECT " +
 		"	id," +
 		"	name," +
+		"	teacher_id," +
 		"	description," +
 		"	category_id as categoryID," +
 		"	max_students as maxStudents," +
@@ -82,6 +87,8 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 		"	start_day as startDay," +
 		"	type," +
 		"	place," +
+		"	allowStudentsAfterStart," +
+		"	payment," +
 		"	class_open as classOpen," +
 		"	classes_given as classesGiven," +
 		"	created_at as createdAt, " +
@@ -112,6 +119,12 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 		return nil, err
 	}
 
+	if result["allowStudentsAfterStart"].(int64) == 1 {
+		result["allowStudentsAfterStart"] = true
+	} else {
+		result["allowStudentsAfterStart"] = false
+	}
+
 	course := domain.Course{}
 	err = mapper(result, &course)
 	if err != nil {
@@ -136,7 +149,9 @@ func (c Course) Update(i *tracer.Infos, course *domain.Course) error {
 		"	price = ?," +
 		"	start_day = FROM_UNIXTIME(?)," +
 		"	type = ?," +
-		"	place = ? " +
+		"	place = ?," +
+		"	payment = ?," +
+		"	allowStudentsAfterStart = ? " +
 		"WHERE " +
 		"	id = ? AND" +
 		"	teacher_id = (SELECT t.id FROM teacher t INNER JOIN users u on u.id = t.user_id where u.email = ?)"
@@ -152,6 +167,8 @@ func (c Course) Update(i *tracer.Infos, course *domain.Course) error {
 		course.StartDay,
 		course.Type,
 		course.Place,
+		course.Payment,
+		course.AllowStudentsAfterStart,
 		course.ID,
 		course.Email)
 
@@ -183,36 +200,33 @@ func (c Course) Delete(i *tracer.Infos,  id int, email string) error {
 	return nil
 }
 
-func (c Course) Search(i *tracer.Infos, name string) ([]domain.Course, error) {
+func (c Course) Search(i *tracer.Infos, name string, page int) ([]domain.Course, error) {
 	i.TraceIt(c.traceName)
 	defer i.Span.Finish()
 
+	limit := config.Config.SearchLimit
+	offset := (page - 1) * limit
+
 	query := "SELECT " +
+		"	c.id as id," +
 		"	c.name as name," +
 		"	c.description as description," +
 		"	ca.name as categoryName," +
 		"	ca.id as categoryID," +
-		"	CONCAT(u.first_name, ' ', u.last_name) as teacherName," +
 		"	c.start_day as startDay," +
 		"	c.price," +
 		"	c.type, " +
 		"	c.created_at as createdAt " +
 		"FROM course c " +
 		"INNER JOIN category ca ON ca.id = c.category_id " +
-		"INNER JOIN teacher te ON te.id = c.teacher_id " +
-		"INNER JOIN users u ON u.id = te.user_id " +
 		"WHERE " +
 		"	soundex(c.name) = soundex(?) AND " +
-		"	active is true"
+		"	active is true " +
+		"LIMIT ? " +
+		"OFFSET ?"
 
-	result, err := c.db.Fetch(i, query, name)
+	result, err := c.db.Fetch(i, query, name, limit, offset)
 	if err != nil {
-		i.LogError(err)
-		return nil, err
-	}
-
-	if len(result) == 0{
-		err = errors.New("no course found")
 		i.LogError(err)
 		return nil, err
 	}
@@ -232,6 +246,29 @@ func (c Course) Search(i *tracer.Infos, name string) ([]domain.Course, error) {
 	}
 
 	return courses, nil
+}
+
+func (c Course) GetNextPageCourse(i *tracer.Infos, name string) (map[string]interface{}, error) {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	q := "SELECT " +
+		"	count(c.id) as count " +
+		"FROM course c " +
+		"INNER JOIN category ca ON ca.id = c.category_id " +
+		"INNER JOIN teacher te ON te.id = c.teacher_id " +
+		"INNER JOIN users u ON u.id = te.user_id " +
+		"WHERE " +
+		"	soundex(c.name) = soundex(?) AND " +
+		"	active is true "
+
+	result, err := c.db.Get(i, q, name)
+
+	if err != nil {
+		i.LogError(err)
+		return nil, err
+	}
+	return result, nil
 }
 
 func mapper(data interface{}, to interface{}) error {

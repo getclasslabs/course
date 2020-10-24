@@ -9,6 +9,7 @@ type Configuration struct {
 		Port string `yaml:"port"`
 	} `yaml:"jaeger"`
 	Mysql Mysql `yaml:"mysql"`
+	SearchLimit int `yaml:"search_limit"`
 }
 
 type Mysql struct {
