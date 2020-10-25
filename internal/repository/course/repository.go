@@ -23,9 +23,9 @@ func NewCourse() *Course {
 	}
 }
 
-func (c Course) Create(i *tracer.Infos, course *domain.Course) (int, error) {
+func (c *Course) Create(i *tracer.Infos, course *domain.Course) (int, error) {
 	q := "INSERT INTO course (teacher_id, name, description, category_id, max_students, classes, periods, price, " +
-		"start_day, type, place, payment, allowStudentsAfterStart)" +
+		"start_day, type, place, payment, allow_students_after_start)" +
 		"VALUES ((SELECT t.id" +
 		"         FROM teacher t" +
 		"                  INNER JOIN users u on u.id = t.user_id" +
@@ -70,7 +70,7 @@ func (c Course) Create(i *tracer.Infos, course *domain.Course) (int, error) {
 	return int(id), nil
 }
 
-func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, error) {
+func (c *Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, error) {
 	i.TraceIt(c.traceName)
 	defer i.Span.Finish()
 
@@ -87,7 +87,7 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 		"	start_day as startDay," +
 		"	type," +
 		"	place," +
-		"	allowStudentsAfterStart," +
+		"	allow_students_after_start," +
 		"	payment," +
 		"	class_open as classOpen," +
 		"	classes_given as classesGiven," +
@@ -119,10 +119,10 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 		return nil, err
 	}
 
-	if result["allowStudentsAfterStart"].(int64) == 1 {
-		result["allowStudentsAfterStart"] = true
+	if result["allow_students_after_start"].(int64) == 1 {
+		result["allow_students_after_start"] = true
 	} else {
-		result["allowStudentsAfterStart"] = false
+		result["allow_students_after_start"] = false
 	}
 
 	course := domain.Course{}
@@ -135,7 +135,7 @@ func (c Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, erro
 	return &course, nil
 }
 
-func (c Course) Update(i *tracer.Infos, course *domain.Course) error {
+func (c *Course) Update(i *tracer.Infos, course *domain.Course) error {
 	i.TraceIt(c.traceName)
 	defer i.Span.Finish()
 
@@ -151,7 +151,7 @@ func (c Course) Update(i *tracer.Infos, course *domain.Course) error {
 		"	type = ?," +
 		"	place = ?," +
 		"	payment = ?," +
-		"	allowStudentsAfterStart = ? " +
+		"	allow_students_after_start = ? " +
 		"WHERE " +
 		"	id = ? AND" +
 		"	teacher_id = (SELECT t.id FROM teacher t INNER JOIN users u on u.id = t.user_id where u.email = ?)"
@@ -180,7 +180,7 @@ func (c Course) Update(i *tracer.Infos, course *domain.Course) error {
 	return nil
 }
 
-func (c Course) Delete(i *tracer.Infos,  id int, email string) error {
+func (c *Course) Delete(i *tracer.Infos,  id int, email string) error {
 	i.TraceIt(c.traceName)
 	defer i.Span.Finish()
 
@@ -200,7 +200,7 @@ func (c Course) Delete(i *tracer.Infos,  id int, email string) error {
 	return nil
 }
 
-func (c Course) Search(i *tracer.Infos, name string, page int) ([]domain.Course, error) {
+func (c *Course) Search(i *tracer.Infos, name string, page int) ([]domain.Course, error) {
 	i.TraceIt(c.traceName)
 	defer i.Span.Finish()
 
@@ -248,7 +248,7 @@ func (c Course) Search(i *tracer.Infos, name string, page int) ([]domain.Course,
 	return courses, nil
 }
 
-func (c Course) GetNextPageCourse(i *tracer.Infos, name string) (map[string]interface{}, error) {
+func (c *Course) GetNextPageCourse(i *tracer.Infos, name string) (map[string]interface{}, error) {
 	i.TraceIt(c.traceName)
 	defer i.Span.Finish()
 
@@ -271,6 +271,71 @@ func (c Course) GetNextPageCourse(i *tracer.Infos, name string) (map[string]inte
 	return result, nil
 }
 
+func (c *Course) GetToRegistered(i *tracer.Infos, courseID int) (*domain.Course, error){
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	fields := "c.class_open, " +
+		"	c.place, " +
+		"	" +
+		"	c.name as name, " +
+		"	c.description as description," +
+		"	ca.name as categoryName," +
+		"	ca.id as categoryID," +
+		"	c.start_day as startDay," +
+		"	c.price," +
+		"	c.type, " +
+		"	c.image, " +
+		"	c.created_at as createdAt"
+
+	return c.getToStudent(i, courseID, fields)
+}
+
+func (c *Course) GetToNotRegistered(i *tracer.Infos, courseID int) (*domain.Course, error){
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	fields := "" +
+		"	c.name as name," +
+		"	c.description as description," +
+		"	ca.name as categoryName," +
+		"	ca.id as categoryID," +
+		"	c.start_day as startDay," +
+		"	c.price," +
+		"	c.type, " +
+		"	c.image, " +
+		"	c.created_at as createdAt, " +
+		"	c.periods "
+
+	return c.getToStudent(i, courseID, fields)
+
+}
+
+func (c *Course) getToStudent(i *tracer.Infos, courseID int, fields string) (*domain.Course, error){
+	q := "SELECT " +
+		fields +
+		"FROM course c " +
+		"INNER JOIN category ca ON ca.id = c.category_id " +
+		"WHERE " +
+		"	c.id = ?"
+
+	result, err := c.db.Get(i, q, courseID)
+
+	if err != nil {
+		i.LogError(err)
+		return nil, err
+	}
+
+	ret := &domain.Course{}
+	err = mapper(result, ret)
+	if err != nil {
+		i.LogError(err)
+		return nil, err
+	}
+
+	return ret, nil
+}
+
 func mapper(data interface{}, to interface{}) error {
 	jsonResult, err := json.Marshal(data)
 	if err != nil {
@@ -283,5 +348,4 @@ func mapper(data interface{}, to interface{}) error {
 	}
 	return nil
 }
-
 

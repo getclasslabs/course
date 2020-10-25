@@ -24,7 +24,7 @@ func (s *Server) serve() {
 	s.Router.Path("/heartbeat").HandlerFunc(request.PreRequest(handler.Heartbeat)).Methods(http.MethodGet)
 	s.Router.Path("/categories").HandlerFunc(request.PreRequest(handler.GetCategory)).Methods(http.MethodGet)
 
-	//Searchesuserdb@127.0.0.1
+	//Searches
 	s.Router.Path("/search").HandlerFunc(request.PreRequest(handler.Search)).Methods(http.MethodGet)
 	s.Router.Path("/category/search").HandlerFunc(request.PreRequest(handler.CategorySearch)).Methods(http.MethodGet)
 

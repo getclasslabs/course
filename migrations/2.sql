@@ -1,3 +1,3 @@
 USE userdb;
 
-ALTER TABLE course ADD allowStudentsAfterStart BOOLEAN DEFAULT FALSE;
+ALTER TABLE course ADD allow_students_after_start BOOLEAN DEFAULT FALSE;

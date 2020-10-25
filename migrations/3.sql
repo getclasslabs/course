@@ -1,0 +1,3 @@
+USE userdb;
+
+ALTER TABLE course ADD image BOOLEAN DEFAULT FALSE;
