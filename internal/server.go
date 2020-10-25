@@ -39,4 +39,8 @@ func (s *Server) serve() {
 
 	s.Router.PathPrefix("/category/images/").Handler(http.StripPrefix("/category/images/",
 		http.FileServer(http.Dir("./category_photos/"))))
+
+	//Course Ingress
+	s.Router.Path("/ingress").HandlerFunc(request.PreRequest(handler.Ingress)).Methods(http.MethodPost)
+
 }
