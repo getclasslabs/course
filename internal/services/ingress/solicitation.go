@@ -71,3 +71,11 @@ func saveReceipt(i *tracer.Infos, solicitation *domain.IngressSolicitation) (str
 	}
 	return name, nil
 }
+
+func ListRequests(i *tracer.Infos, courseID int, email string) ([]domain.IngressSolicitation, error) {
+	i.TraceIt("solicitation service")
+	defer i.Span.Finish()
+
+	solRepo := ingress.NewSolicitation()
+	return solRepo.GetRequestsToCourse(i, courseID, email)
+}

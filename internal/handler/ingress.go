@@ -6,7 +6,9 @@ import (
 	"github.com/getclasslabs/course/internal/services/ingress"
 	"github.com/getclasslabs/go-tools/pkg/request"
 	"github.com/getclasslabs/go-tools/pkg/tracer"
+	"github.com/gorilla/mux"
 	"net/http"
+	"strconv"
 )
 
 func Ingress(w http.ResponseWriter, r *http.Request) {
@@ -38,3 +40,22 @@ func Ingress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func ListSolicitations(w http.ResponseWriter, r *http.Request) {
+	i := r.Context().Value(request.ContextKey).(*tracer.Infos)
+	i.TraceIt(spanName)
+	defer i.Span.Finish()
+
+	courseID, err := strconv.Atoi(mux.Vars(r)["courseID"])
+	email := r.Header.Get("X-Consumer-Username")
+
+	solicitations, err := ingress.ListRequests(i, courseID, email)
+	if err != nil{
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	ret, _ := json.Marshal(solicitations)
+	_, _ = w.Write(ret)
+}
+
