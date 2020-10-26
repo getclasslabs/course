@@ -3,7 +3,9 @@ module github.com/getclasslabs/course
 go 1.14
 
 require (
+	github.com/disintegration/imaging v1.6.2
 	github.com/getclasslabs/go-tools v1.0.5
+	github.com/getclasslabs/user v0.0.0-20201025190635-1a0ad1e0bfdd
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gorilla/mux v1.8.0
 	github.com/opentracing/opentracing-go v1.2.0

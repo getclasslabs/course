@@ -1,18 +1,5 @@
 USE userdb;
 
-CREATE TABLE bank_infos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(250) NOT NULL,
-    cpf  VARCHAR(20) NOT NULL,
-    bank_name VARCHAR(100) NOT NULL,
-    agency VARCHAR(20) NOT NULL,
-    type VARCHAR(30)
-);
-
-ALTER TABLE teacher ADD bank_infos_id INT;
-ALTER TABLE teacher
-ADD FOREIGN KEY (bank_infos_id) REFERENCES bank_infos(id);
-
 CREATE TABLE course_ingress_solicitation (
     id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT NOT NULL,

@@ -28,6 +28,10 @@ func (s *Server) serve() {
 	s.Router.Path("/search").HandlerFunc(request.PreRequest(handler.Search)).Methods(http.MethodGet)
 	s.Router.Path("/category/search").HandlerFunc(request.PreRequest(handler.CategorySearch)).Methods(http.MethodGet)
 
+	//Course Image
+	s.Router.Path("/image/{courseId}").HandlerFunc(request.PreRequest(handler.UpdatePhoto)).Methods(http.MethodPut)
+	s.Router.Path("/image/{courseId}").HandlerFunc(request.PreRequest(handler.DeletePhoto)).Methods(http.MethodDelete)
+
 	//Course CRUD
 	s.Router.Path("/create").HandlerFunc(request.PreRequest(handler.CourseCRUD)).Methods(http.MethodPost)
 	s.Router.Path("/{id}").HandlerFunc(request.PreRequest(handler.CourseCRUD)).Methods(http.MethodGet)
@@ -39,6 +43,9 @@ func (s *Server) serve() {
 
 	s.Router.PathPrefix("/category/images/").Handler(http.StripPrefix("/category/images/",
 		http.FileServer(http.Dir("./category_photos/"))))
+
+	s.Router.PathPrefix("/course/images/").Handler(http.StripPrefix("/course/images/",
+		http.FileServer(http.Dir("./course_photos/"))))
 
 	//Course Ingress
 	s.Router.Path("/ingress").HandlerFunc(request.PreRequest(handler.Ingress)).Methods(http.MethodPost)

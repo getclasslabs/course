@@ -141,4 +141,59 @@ func Search(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(ret)
 }
 
+func UpdatePhoto(w http.ResponseWriter, r *http.Request) {
+	i := r.Context().Value(request.ContextKey).(*tracer.Infos)
+	i.TraceIt(spanName)
+	defer i.Span.Finish()
 
+	email := r.Header.Get("X-Consumer-Username")
+	courseId := mux.Vars(r)["courseId"]
+
+	if courseId == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"msg": "Course not found"}`))
+	}
+
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"msg": "The image sent is bigger than 10mb"}`))
+	}
+
+	file, _, err := r.FormFile("image")
+	if err != nil {
+		i.Span.SetTag("getting form file", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	imageName, err := course.UpdateImage(i, email, courseId, file)
+	if err != nil {
+		i.Span.SetTag("updating image", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	resp := map[string]string{
+		"image": imageName,
+	}
+
+	ret, _ := json.Marshal(resp)
+	_, _ = w.Write(ret)
+}
+
+func DeletePhoto(w http.ResponseWriter, r *http.Request) {
+	i := r.Context().Value(request.ContextKey).(*tracer.Infos)
+	i.TraceIt(spanName)
+	defer i.Span.Finish()
+
+	courseId := mux.Vars(r)["courseId"]
+
+	err := course.ErasePhoto(i, courseId)
+	if err != nil {
+		i.Span.SetTag("getting form file", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
