@@ -43,5 +43,5 @@ func (s *Server) serve() {
 	//Course Ingress
 	s.Router.Path("/ingress").HandlerFunc(request.PreRequest(handler.Ingress)).Methods(http.MethodPost)
 	s.Router.Path("/list/{courseID}").HandlerFunc(request.PreRequest(handler.ListSolicitations)).Methods(http.MethodGet)
-
+	s.Router.Path("/accept").HandlerFunc(request.PreRequest(handler.AcceptSolicitation)).Methods(http.MethodPost)
 }

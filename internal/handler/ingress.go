@@ -59,3 +59,22 @@ func ListSolicitations(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(ret)
 }
 
+func AcceptSolicitation(w http.ResponseWriter, r *http.Request) {
+	i := r.Context().Value(request.ContextKey).(*tracer.Infos)
+	i.TraceIt(spanName)
+	defer i.Span.Finish()
+
+	acceptance := domain.IngressAcceptance{}
+	err := json.NewDecoder(r.Body).Decode(&acceptance)
+	if err != nil{
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = ingress.Accept(i, &acceptance)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+}
