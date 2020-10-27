@@ -273,7 +273,7 @@ func (c *Course) GetNextPageCourse(i *tracer.Infos, name string) (map[string]int
 	return result, nil
 }
 
-func (c *Course) GetToRegistered(i *tracer.Infos, courseID int) (*domain.Course, error){
+func (c *Course) GetToRegistered(i *tracer.Infos, courseID int, approved bool) (*domain.Course, error){
 	i.TraceIt(c.traceName)
 	defer i.Span.Finish()
 
@@ -281,6 +281,7 @@ func (c *Course) GetToRegistered(i *tracer.Infos, courseID int) (*domain.Course,
 		"	c.place, " +
 		"	" +
 		"	c.name as name, " +
+		"	c.teacher_id, " +
 		"	c.description as description," +
 		"	ca.name as categoryName," +
 		"	ca.id as categoryID," +
@@ -288,7 +289,14 @@ func (c *Course) GetToRegistered(i *tracer.Infos, courseID int) (*domain.Course,
 		"	c.price," +
 		"	c.type, " +
 		"	c.image, " +
-		"	c.created_at as createdAt"
+		"	c.created_at as createdAt," +
+		"	true as solicitation, "
+
+	if approved {
+		fields = fields + " true as registered "
+	} else {
+		fields = fields + " false as registered "
+	}
 
 	return c.getToStudent(i, courseID, fields)
 }
@@ -299,6 +307,8 @@ func (c *Course) GetToNotRegistered(i *tracer.Infos, courseID int) (*domain.Cour
 
 	fields := "" +
 		"	c.name as name," +
+		"	c.teacher_id," +
+		"	c.payment," +
 		"	c.description as description," +
 		"	ca.name as categoryName," +
 		"	ca.id as categoryID," +
@@ -307,7 +317,10 @@ func (c *Course) GetToNotRegistered(i *tracer.Infos, courseID int) (*domain.Cour
 		"	c.type, " +
 		"	c.image, " +
 		"	c.created_at as createdAt, " +
-		"	c.periods "
+		"	c.periods, " +
+		"	c.max_students as maxStudents, " +
+		"	count(cs.id) as studentsRegistered, " +
+		"	false as solicitation "
 
 	return c.getToStudent(i, courseID, fields)
 
@@ -318,14 +331,22 @@ func (c *Course) getToStudent(i *tracer.Infos, courseID int, fields string) (*do
 		fields +
 		"FROM course c " +
 		"INNER JOIN category ca ON ca.id = c.category_id " +
+		"LEFT JOIN course_ingress_solicitation cs ON cs.course_id = c.id " +
 		"WHERE " +
-		"	c.id = ?"
+		"	c.id = ? " +
+		"GROUP BY c.id"
 
 	result, err := c.db.Get(i, q, courseID)
 
 	if err != nil {
 		i.LogError(err)
 		return nil, err
+	}
+	result["price"], err = strconv.ParseFloat(result["price"].(string), 64)
+	result["solicitation"] = result["solicitation"].(int64) == 1
+
+	if result["registered"] != nil {
+		result["registered"] = result["registered"].(int64) == 1
 	}
 
 	ret := &domain.Course{}
@@ -334,6 +355,14 @@ func (c *Course) getToStudent(i *tracer.Infos, courseID int, fields string) (*do
 		i.LogError(err)
 		return nil, err
 	}
+
+	if result["registered"] != nil {
+		reg := result["registered"].(bool)
+		ret.Registered = &reg
+	}
+
+	sol := result["solicitation"].(bool)
+	ret.Solicitation = &sol
 
 	return ret, nil
 }
