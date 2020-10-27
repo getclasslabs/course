@@ -92,7 +92,8 @@ func (c *Course) Get(i *tracer.Infos, id int, email string) (*domain.Course, err
 		"	class_open as classOpen," +
 		"	classes_given as classesGiven," +
 		"	created_at as createdAt, " +
-		"	active " +
+		"	active, " +
+		"	image " +
 		"FROM course " +
 		"WHERE " +
 		"	id = ? AND " +
@@ -215,7 +216,8 @@ func (c *Course) Search(i *tracer.Infos, name string, page int) ([]domain.Course
 		"	ca.id as categoryID," +
 		"	c.start_day as startDay," +
 		"	c.price," +
-		"	c.type, " +
+		"	c.type," +
+		" 	c.image," +
 		"	c.created_at as createdAt " +
 		"FROM course c " +
 		"INNER JOIN category ca ON ca.id = c.category_id " +
@@ -363,6 +365,82 @@ func (c *Course) getToStudent(i *tracer.Infos, courseID int, fields string) (*do
 	ret.Solicitation = &sol
 
 	return ret, nil
+}
+
+func (c *Course) GetCourseFromUser(i *tracer.Infos, email, id string) (map[string]interface{}, error) {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	q := "SELECT " +
+		"	c.id " +
+		"FROM course c " +
+		"INNER JOIN teacher te ON te.id = c.teacher_id " +
+		"INNER JOIN users u ON u.id = te.user_id " +
+		"WHERE " +
+		"	c.id = ? AND " +
+		"	u.email = ? "
+
+	result, err := c.db.Get(i, q, id, email)
+
+	if err != nil {
+		i.LogError(err)
+		return nil, err
+	}
+	return result, nil
+}
+
+func (c *Course) UpdateImage(i *tracer.Infos, id string, name string) error {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	q := "UPDATE course SET " +
+		"	image = ? " +
+		"WHERE " +
+		"	id = ?"
+
+	_, err := c.db.Update(i, q, name, id)
+	if err != nil {
+		i.LogError(err)
+		return err
+	}
+	return nil
+}
+
+func (c *Course) GetCourseById(i *tracer.Infos, id string) (map[string]interface{}, error) {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	q := "SELECT " +
+		"id, " +
+		"image " +
+		"FROM course " +
+		"WHERE " +
+		"id = ?"
+
+	result, err := c.db.Get(i, q, id)
+
+	if err != nil {
+		i.LogError(err)
+		return nil, err
+	}
+	return result, nil
+}
+
+func (c *Course) UpdatePhoto(i *tracer.Infos, id string, path string) error {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	q := "UPDATE course SET " +
+		"	image = ? " +
+		"WHERE " +
+		"	id = ?"
+
+	_, err := c.db.Update(i, q, path, id)
+	if err != nil {
+		i.LogError(err)
+		return err
+	}
+	return nil
 }
 
 func mapper(data interface{}, to interface{}) error {
