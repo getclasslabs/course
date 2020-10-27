@@ -216,7 +216,8 @@ func (c *Course) Search(i *tracer.Infos, name string, page int) ([]domain.Course
 		"	ca.id as categoryID," +
 		"	c.start_day as startDay," +
 		"	c.price," +
-		"	c.type, " +
+		"	c.type," +
+		" 	c.image," +
 		"	c.created_at as createdAt " +
 		"FROM course c " +
 		"INNER JOIN category ca ON ca.id = c.category_id " +
