@@ -286,7 +286,8 @@ func (c *Course) GetToRegistered(i *tracer.Infos, courseID int) (*domain.Course,
 		"	c.price," +
 		"	c.type, " +
 		"	c.image, " +
-		"	c.created_at as createdAt"
+		"	c.created_at as createdAt," +
+		"	true as registered "
 
 	return c.getToStudent(i, courseID, fields)
 }
@@ -305,7 +306,8 @@ func (c *Course) GetToNotRegistered(i *tracer.Infos, courseID int) (*domain.Cour
 		"	c.type, " +
 		"	c.image, " +
 		"	c.created_at as createdAt, " +
-		"	c.periods "
+		"	c.periods, " +
+		"	false as registered "
 
 	return c.getToStudent(i, courseID, fields)
 
@@ -325,6 +327,8 @@ func (c *Course) getToStudent(i *tracer.Infos, courseID int, fields string) (*do
 		i.LogError(err)
 		return nil, err
 	}
+	result["price"], err = strconv.ParseFloat(result["price"].(string), 64)
+	result["registered"] = result["registered"].(int64) == 1
 
 	ret := &domain.Course{}
 	err = mapper(result, ret)
@@ -332,6 +336,8 @@ func (c *Course) getToStudent(i *tracer.Infos, courseID int, fields string) (*do
 		i.LogError(err)
 		return nil, err
 	}
+	reg := result["registered"].(bool)
+	ret.Registered = &reg
 
 	return ret, nil
 }

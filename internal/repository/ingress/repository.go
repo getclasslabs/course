@@ -16,7 +16,7 @@ type Solicitation struct {
 func NewSolicitation() *Solicitation {
 	return &Solicitation{
 		db:        repository.Db,
-		traceName: "category repository",
+		traceName: "solicitation repository",
 	}
 }
 
