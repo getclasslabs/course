@@ -62,5 +62,27 @@ func (a *Acceptance) Get(i *tracer.Infos, email string, courseID int) (bool, err
 	}
 
 	return false, nil
+}
 
+func (a *Acceptance) GetStudents(i *tracer.Infos, email string, courseID int) ([]map[string]interface{}, error) {
+	i.TraceIt(a.traceName)
+	defer i.Span.Finish()
+	q := "SELECT" +
+		"	r.student_id as studentID " +
+		"FROM course_registration r " +
+		"INNER JOIN course c ON c.id = r.course_id " +
+		"INNER JOIN teacher t ON t.id = c.teacher_id " +
+		"INNER JOIN users u ON u.id = t.user_id " +
+		"WHERE" +
+		"	course_id = ? AND " +
+		"	valid = true"
+
+	result, err := a.db.Fetch(i, q, courseID, email)
+
+	if err != nil {
+		i.LogError(err)
+		return nil, err
+	}
+
+	return result, nil
 }

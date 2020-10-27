@@ -78,3 +78,26 @@ func AcceptSolicitation(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusCreated)
 }
+
+func GetCourseStudents(w http.ResponseWriter, r *http.Request) {
+	i := r.Context().Value(request.ContextKey).(*tracer.Infos)
+	i.TraceIt(spanName)
+	defer i.Span.Finish()
+
+	email := r.Header.Get("X-Consumer-Username")
+
+	courseID, err := strconv.Atoi(mux.Vars(r)["courseID"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	students, err := ingress.GetStudents(i, email, courseID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	ret, _ := json.Marshal(students)
+
+	_, _ = w.Write(ret)
+}
