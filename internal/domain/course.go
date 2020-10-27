@@ -24,4 +24,6 @@ type Course struct {
 	Active                  bool    `json:"active,omitempty"`
 	ImagePath				string 	`json:"imagePath"`
 	Registered				*bool    `json:"registered,omitempty"`
+	Solicitation			*bool    `json:"solicitation,omitempty"`
+	StudentsRegistered		int		`json:"studentsRegistered"`
 }

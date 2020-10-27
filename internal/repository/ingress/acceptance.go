@@ -64,6 +64,30 @@ func (a *Acceptance) Get(i *tracer.Infos, email string, courseID int) (bool, err
 	return false, nil
 }
 
+func (a *Acceptance) GetSolicitation(i *tracer.Infos, email string, courseID int) (bool, error){
+	i.TraceIt(a.traceName)
+	defer i.Span.Finish()
+
+	q := "SELECT" +
+		"	COUNT(*) as exist " +
+		"FROM course_ingress_solicitation " +
+		"WHERE" +
+		"	course_id = ? AND" +
+		"	student_id = (SELECT s.id FROM students s INNER JOIN users u ON u.id = s.user_id WHERE u.email = ?)"
+
+	result, err := a.db.Get(i, q, courseID, email)
+
+	if err != nil {
+		i.LogError(err)
+		return false, err
+	}
+	if len(result) > 0 {
+		return result["exist"].(int64) > 0, nil
+	}
+
+	return false, nil
+}
+
 func (a *Acceptance) GetStudents(i *tracer.Infos, email string, courseID int) ([]map[string]interface{}, error) {
 	i.TraceIt(a.traceName)
 	defer i.Span.Finish()
