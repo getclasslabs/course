@@ -325,6 +325,7 @@ func (c *Course) getToStudent(i *tracer.Infos, courseID int, fields string) (*do
 		i.LogError(err)
 		return nil, err
 	}
+	result["price"], err = strconv.ParseFloat(result["price"].(string), 64)
 
 	ret := &domain.Course{}
 	err = mapper(result, ret)

@@ -38,3 +38,29 @@ func (a *Acceptance) Create(i *tracer.Infos, acceptance *domain.IngressAcceptanc
 	}
 	return nil
 }
+
+func (a *Acceptance) Get(i *tracer.Infos, email string, courseID int) (bool, error){
+	i.TraceIt(a.traceName)
+	defer i.Span.Finish()
+
+	q := "SELECT" +
+		"	COUNT(*) as exist " +
+		"FROM course_registration " +
+		"WHERE" +
+		"	course_id = ? AND" +
+		"	student_id = (SELECT s.id FROM students s INNER JOIN users u ON u.id = s.user_id WHERE u.email = ?) AND" +
+		"	valid = true"
+
+	result, err := a.db.Get(i, q, courseID, email)
+
+	if err != nil {
+		i.LogError(err)
+		return false, err
+	}
+	if len(result) > 0 {
+		return result["exist"].(int64) > 0, nil
+	}
+
+	return false, nil
+
+}
