@@ -15,25 +15,26 @@ func Ingress(w http.ResponseWriter, r *http.Request) {
 	i := r.Context().Value(request.ContextKey).(*tracer.Infos)
 	i.TraceIt(spanName)
 	defer i.Span.Finish()
+	email := r.Header.Get("X-Consumer-Username")
 
-	err := r.ParseMultipartForm(10 << 20)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte(`{"msg": "The image sent is bigger than 10mb"}`))
-	}
-
-	receipt, _, err := r.FormFile("receipt")
+	//err := r.ParseMultipartForm(10 << 20)
+	//if err != nil {
+	//	w.WriteHeader(http.StatusBadRequest)
+	//	_, _ = w.Write([]byte(`{"msg": "The image sent is bigger than 10mb"}`))
+	//}
+	//
+	//receipt, _, err := r.FormFile("receipt")
 
 	iDomain := domain.IngressSolicitation{}
-	err = json.NewDecoder(r.Body).Decode(&iDomain)
+	err := json.NewDecoder(r.Body).Decode(&iDomain)
 	if err != nil && err.Error() != "EOF" {
 		i.Span.SetTag("read", http.StatusBadRequest)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	iDomain.Image = receipt
-
+	//iDomain.Image = receipt
+	iDomain.Email = email
 	err = ingress.Request(i, &iDomain)
 	if err != nil{
 		w.WriteHeader(http.StatusInternalServerError)

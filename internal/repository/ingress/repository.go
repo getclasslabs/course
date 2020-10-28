@@ -25,7 +25,8 @@ func (s *Solicitation) Create(i *tracer.Infos, courseID int, studentEmail, text,
 	defer i.Span.Finish()
 
 	q := "INSERT INTO course_ingress_solicitation (student_id, course_id, text, image) " +
-		"VALUES (?, ?, ?, ?);"
+		"	VALUES ((SELECT s.id FROM students s INNER JOIN users u ON s.user_id = u.id WHERE u.email = ?), ?, ?, ?)"
+
 
 	_, err := s.db.Insert(i, q,
 		studentEmail,
@@ -54,7 +55,7 @@ func (s *Solicitation) GetRequestsToCourse(i *tracer.Infos, courseID int, email 
 		"FROM course_ingress_solicitation cs " +
 		"INNER JOIN course c ON cs.course_id = c.id " +
 		"INNER JOIN teacher t ON c.teacher_id = t.id " +
-		"INNER JOIN user u ON t.user_id = u.id " +
+		"INNER JOIN users u ON t.user_id = u.id " +
 		"WHERE " +
 		"	u.email = ? AND " +
 		"	c.id = ?"
@@ -66,7 +67,7 @@ func (s *Solicitation) GetRequestsToCourse(i *tracer.Infos, courseID int, email 
 	}
 
 	var solicitations []domain.IngressSolicitation
-	err = mapper(result, solicitations)
+	err = mapper(result, &solicitations)
 	if err != nil{
 		i.LogError(err)
 		return nil, err
