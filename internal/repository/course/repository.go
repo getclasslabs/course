@@ -223,12 +223,12 @@ func (c *Course) Search(i *tracer.Infos, name string, page int) ([]domain.Course
 		"INNER JOIN category ca ON ca.id = c.category_id " +
 		"WHERE " +
 		"	soundex(c.name) = soundex(?) OR " +
-		"	? like '%c.name%' AND " +
+		"	c.name like ? AND " +
 		"	active is true " +
 		"LIMIT ? " +
 		"OFFSET ?"
 
-	result, err := c.db.Fetch(i, query, name, limit, offset)
+	result, err := c.db.Fetch(i, query, name, "%"+name+"%", limit, offset)
 	if err != nil {
 		i.LogError(err)
 		return nil, err
@@ -263,10 +263,10 @@ func (c *Course) GetNextPageCourse(i *tracer.Infos, name string) (map[string]int
 		"INNER JOIN users u ON u.id = te.user_id " +
 		"WHERE " +
 		"	soundex(c.name) = soundex(?) OR " +
-		"	? like '%c.name%' AND " +
+		"	c.name like ? AND " +
 		"	active is true "
 
-	result, err := c.db.Get(i, q, name)
+	result, err := c.db.Get(i, q, name, "%"+name+"%")
 
 	if err != nil {
 		i.LogError(err)
