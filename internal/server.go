@@ -22,6 +22,15 @@ func NewServer() *Server {
 
 func (s *Server) serve() {
 	s.Router.Path("/heartbeat").HandlerFunc(request.PreRequest(handler.Heartbeat)).Methods(http.MethodGet)
+
+	//Course Ingress
+	s.Router.Path("/ingress").HandlerFunc(request.PreRequest(handler.Ingress)).Methods(http.MethodPost)
+	s.Router.Path("/solicitations/{courseID}").HandlerFunc(request.PreRequest(handler.ListSolicitations)).Methods(http.MethodGet)
+	s.Router.Path("/accept").HandlerFunc(request.PreRequest(handler.AcceptSolicitation)).Methods(http.MethodPost)
+	s.Router.Path("/students/{courseID}").HandlerFunc(request.PreRequest(handler.GetCourseStudents)).Methods(http.MethodGet)
+
+	//Get
+	s.Router.Path("/mine").HandlerFunc(request.PreRequest(handler.GetMyCourses)).Methods(http.MethodGet)
 	s.Router.Path("/categories").HandlerFunc(request.PreRequest(handler.GetCategory)).Methods(http.MethodGet)
 
 	//Searches
@@ -47,10 +56,6 @@ func (s *Server) serve() {
 	s.Router.PathPrefix("/course/images/").Handler(http.StripPrefix("/course/images/",
 		http.FileServer(http.Dir("./course_photos/"))))
 
-	//Course Ingress
-	s.Router.Path("/ingress").HandlerFunc(request.PreRequest(handler.Ingress)).Methods(http.MethodPost)
-	s.Router.Path("/solicitations/{courseID}").HandlerFunc(request.PreRequest(handler.ListSolicitations)).Methods(http.MethodGet)
-	s.Router.Path("/accept").HandlerFunc(request.PreRequest(handler.AcceptSolicitation)).Methods(http.MethodPost)
-	s.Router.Path("/students/{courseID}").HandlerFunc(request.PreRequest(handler.GetCourseStudents)).Methods(http.MethodGet)
+
 
 }

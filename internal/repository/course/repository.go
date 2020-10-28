@@ -222,7 +222,8 @@ func (c *Course) Search(i *tracer.Infos, name string, page int) ([]domain.Course
 		"FROM course c " +
 		"INNER JOIN category ca ON ca.id = c.category_id " +
 		"WHERE " +
-		"	soundex(c.name) = soundex(?) AND " +
+		"	soundex(c.name) = soundex(?) OR " +
+		"	? like '%c.name%' AND " +
 		"	active is true " +
 		"LIMIT ? " +
 		"OFFSET ?"
@@ -261,7 +262,8 @@ func (c *Course) GetNextPageCourse(i *tracer.Infos, name string) (map[string]int
 		"INNER JOIN teacher te ON te.id = c.teacher_id " +
 		"INNER JOIN users u ON u.id = te.user_id " +
 		"WHERE " +
-		"	soundex(c.name) = soundex(?) AND " +
+		"	soundex(c.name) = soundex(?) OR " +
+		"	? like '%c.name%' AND " +
 		"	active is true "
 
 	result, err := c.db.Get(i, q, name)
@@ -289,7 +291,10 @@ func (c *Course) GetToRegistered(i *tracer.Infos, courseID int, approved bool) (
 		"	c.price," +
 		"	c.type, " +
 		"	c.image, " +
-		"	c.created_at as createdAt," +
+		"	c.created_at as createdAt, " +
+		"	c.classes, " +
+		"	c.periods, " +
+		"	c.max_students as maxStudents, " +
 		"	true as solicitation, "
 
 	if approved {
@@ -319,6 +324,8 @@ func (c *Course) GetToNotRegistered(i *tracer.Infos, courseID int) (*domain.Cour
 		"	c.created_at as createdAt, " +
 		"	c.periods, " +
 		"	c.max_students as maxStudents, " +
+		"	c.classes, " +
+		"	c.periods, " +
 		"	count(cs.id) as studentsRegistered, " +
 		"	false as solicitation "
 
@@ -442,6 +449,88 @@ func (c *Course) UpdatePhoto(i *tracer.Infos, id string, path string) error {
 	}
 	return nil
 }
+
+func (c *Course) IsTeacher(i *tracer.Infos, email string) (bool, error) {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	q := "SELECT count(*) AS exist FROM teacher t INNER JOIN users u ON u.id = t.user_id WHERE u.email = ?"
+
+	result, err := c.db.Get(i, q, email)
+	if err != nil {
+		i.LogError(err)
+		return false, err
+	}
+
+	if len(result) == 0 {
+		return false, nil
+	}
+
+	return result["exist"].(int64) == 1, nil
+}
+
+func (c *Course) TeacherCourses(i *tracer.Infos, email string) ([]map[string]interface{}, error) {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	q := "SELECT " +
+		"	c.id as id,"+
+		"	c.name as name,"+
+		"	c.description as description,"+
+		"	ca.name as categoryName,"+
+		"	ca.id as categoryID,"+
+		"	c.type,"+
+		"	c.image,"+
+		"	c.created_at as createdAt " +
+		"FROM course c " +
+		"INNER JOIN teacher t ON t.id = c.teacher_id " +
+		"INNER JOIN category ca ON ca.id = c.category_id " +
+		"INNER JOIN users u ON u.id = t.user_id " +
+		"WHERE " +
+		"	u.email = ? AND " +
+		"   c.active is true "
+
+	results, err := c.db.Fetch(i, q, email)
+	if err != nil {
+		i.LogError(err)
+		return nil, err
+	}
+
+	return results, nil
+}
+
+
+func (c *Course) StudentCourses(i *tracer.Infos, email string) ([]map[string]interface{}, error) {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	q := "SELECT " +
+		"	c.id as id,"+
+		"	c.name as name,"+
+		"	c.description as description,"+
+		"	ca.name as categoryName,"+
+		"	ca.id as categoryID,"+
+		"	c.type,"+
+		"	c.image,"+
+		"	c.created_at as createdAt " +
+		"FROM course c " +
+		"INNER JOIN category ca ON ca.id = c.category_id " +
+		"INNER JOIN course_registration cu ON cu.course_id = c.id " +
+		"INNER JOIN students s ON s.id = cu.student_id " +
+		"INNER JOIN users u ON u.id = s.user_id " +
+		"WHERE " +
+		"	u.email = ? AND " +
+		"   c.active is true "
+
+	results, err := c.db.Fetch(i, q, email)
+	if err != nil {
+		i.LogError(err)
+		return nil, err
+	}
+
+	return results, nil
+}
+
 
 func mapper(data interface{}, to interface{}) error {
 	jsonResult, err := json.Marshal(data)

@@ -197,3 +197,21 @@ func DeletePhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+
+func GetMyCourses(w http.ResponseWriter, r *http.Request) {
+	i := r.Context().Value(request.ContextKey).(*tracer.Infos)
+	i.TraceIt(spanName)
+	defer i.Span.Finish()
+
+	email := r.Header.Get("X-Consumer-Username")
+
+	courses, err := course.GetMyCourses(i, email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	ret, _ := json.Marshal(courses)
+	_, _ = w.Write(ret)
+}
