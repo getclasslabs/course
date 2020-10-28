@@ -43,3 +43,23 @@ func Search(i *tracer.Infos, name, page string) (map[string]interface{}, error) 
 		"results": courses,
 	}, err
 }
+
+func GetMyCourses(i *tracer.Infos, email string) ([]map[string]interface{}, error){
+	i.TraceIt("getting service")
+	defer i.Span.Finish()
+
+	//pass through user
+
+
+	cRepo := course.NewCourse()
+	isTeacher, err := cRepo.IsTeacher(i, email)
+	if err != nil {
+		return nil, err
+	}
+
+	if isTeacher {
+		return cRepo.TeacherCourses(i, email)
+	}
+
+	return cRepo.StudentCourses(i, email)
+}
