@@ -63,3 +63,24 @@ func GetMyCourses(i *tracer.Infos, email string) ([]map[string]interface{}, erro
 
 	return cRepo.StudentCourses(i, email)
 }
+
+
+func GetFromCourses(i *tracer.Infos, id string) ([]map[string]interface{}, error){
+	i.TraceIt("getting service")
+	defer i.Span.Finish()
+
+	//pass through user
+
+
+	cRepo := course.NewCourse()
+	isTeacher, err := cRepo.IsTeacherById(i, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if isTeacher {
+		return cRepo.TeacherCoursesById(i, id)
+	}
+
+	return cRepo.StudentCoursesById(i, id)
+}

@@ -215,3 +215,20 @@ func GetMyCourses(w http.ResponseWriter, r *http.Request) {
 	ret, _ := json.Marshal(courses)
 	_, _ = w.Write(ret)
 }
+
+func GetFromCourses(w http.ResponseWriter, r *http.Request) {
+	i := r.Context().Value(request.ContextKey).(*tracer.Infos)
+	i.TraceIt(spanName)
+	defer i.Span.Finish()
+
+	id := mux.Vars(r)["id"]
+
+	courses, err := course.GetFromCourses(i, id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	ret, _ := json.Marshal(courses)
+	_, _ = w.Write(ret)
+}

@@ -469,6 +469,7 @@ func (c *Course) IsTeacher(i *tracer.Infos, email string) (bool, error) {
 	return result["exist"].(int64) == 1, nil
 }
 
+
 func (c *Course) TeacherCourses(i *tracer.Infos, email string) ([]map[string]interface{}, error) {
 	i.TraceIt(c.traceName)
 	defer i.Span.Finish()
@@ -499,7 +500,6 @@ func (c *Course) TeacherCourses(i *tracer.Infos, email string) ([]map[string]int
 	return results, nil
 }
 
-
 func (c *Course) StudentCourses(i *tracer.Infos, email string) ([]map[string]interface{}, error) {
 	i.TraceIt(c.traceName)
 	defer i.Span.Finish()
@@ -515,7 +515,7 @@ func (c *Course) StudentCourses(i *tracer.Infos, email string) ([]map[string]int
 		"	c.created_at as createdAt " +
 		"FROM course c " +
 		"INNER JOIN category ca ON ca.id = c.category_id " +
-		"INNER JOIN course_registration cu ON cu.course_id = c.id " +
+		"INNER JOIN course_ingress_solicitation cu ON cu.course_id = c.id " +
 		"INNER JOIN students s ON s.id = cu.student_id " +
 		"INNER JOIN users u ON u.id = s.user_id " +
 		"WHERE " +
@@ -523,6 +523,86 @@ func (c *Course) StudentCourses(i *tracer.Infos, email string) ([]map[string]int
 		"   c.active is true "
 
 	results, err := c.db.Fetch(i, q, email)
+	if err != nil {
+		i.LogError(err)
+		return nil, err
+	}
+
+	return results, nil
+}
+
+func (c *Course) IsTeacherById(i *tracer.Infos, id string) (bool, error) {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	q := "SELECT count(*) AS exist FROM teacher t INNER JOIN users u ON u.id = t.user_id WHERE u.id = ?"
+
+	result, err := c.db.Get(i, q, id)
+	if err != nil {
+		i.LogError(err)
+		return false, err
+	}
+
+	if len(result) == 0 {
+		return false, nil
+	}
+
+	return result["exist"].(int64) == 1, nil
+}
+
+func (c *Course) TeacherCoursesById(i *tracer.Infos, id string) ([]map[string]interface{}, error) {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	q := "SELECT " +
+		"	c.id as id,"+
+		"	c.name as name,"+
+		"	c.description as description,"+
+		"	ca.name as categoryName,"+
+		"	ca.id as categoryID,"+
+		"	c.type,"+
+		"	c.image,"+
+		"	c.created_at as createdAt " +
+		"FROM course c " +
+		"INNER JOIN teacher t ON t.id = c.teacher_id " +
+		"INNER JOIN category ca ON ca.id = c.category_id " +
+		"INNER JOIN users u ON u.id = t.user_id " +
+		"WHERE " +
+		"	u.id = ? AND " +
+		"   c.active is true "
+
+	results, err := c.db.Fetch(i, q, id)
+	if err != nil {
+		i.LogError(err)
+		return nil, err
+	}
+
+	return results, nil
+}
+
+func (c *Course) StudentCoursesById(i *tracer.Infos, id string) ([]map[string]interface{}, error) {
+	i.TraceIt(c.traceName)
+	defer i.Span.Finish()
+
+	q := "SELECT " +
+		"	c.id as id,"+
+		"	c.name as name,"+
+		"	c.description as description,"+
+		"	ca.name as categoryName,"+
+		"	ca.id as categoryID,"+
+		"	c.type,"+
+		"	c.image,"+
+		"	c.created_at as createdAt " +
+		"FROM course c " +
+		"INNER JOIN category ca ON ca.id = c.category_id " +
+		"INNER JOIN course_ingress_solicitation cu ON cu.course_id = c.id " +
+		"INNER JOIN students s ON s.id = cu.student_id " +
+		"INNER JOIN users u ON u.id = s.user_id " +
+		"WHERE " +
+		"	u.id = ? AND " +
+		"   c.active is true "
+
+	results, err := c.db.Fetch(i, q, id)
 	if err != nil {
 		i.LogError(err)
 		return nil, err

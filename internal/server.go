@@ -31,6 +31,7 @@ func (s *Server) serve() {
 
 	//Get
 	s.Router.Path("/mine").HandlerFunc(request.PreRequest(handler.GetMyCourses)).Methods(http.MethodGet)
+	s.Router.Path("/from/{id}").HandlerFunc(request.PreRequest(handler.GetFromCourses)).Methods(http.MethodGet)
 	s.Router.Path("/categories").HandlerFunc(request.PreRequest(handler.GetCategory)).Methods(http.MethodGet)
 
 	//Searches
@@ -56,6 +57,7 @@ func (s *Server) serve() {
 	s.Router.PathPrefix("/course/images/").Handler(http.StripPrefix("/course/images/",
 		http.FileServer(http.Dir("./course_photos/"))))
 
-
+	s.Router.PathPrefix("/receipt/images/").Handler(http.StripPrefix("/receipt/images/",
+		http.FileServer(http.Dir("./receipt_photos/"))))
 
 }
