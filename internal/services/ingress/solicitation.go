@@ -79,3 +79,11 @@ func ListRequests(i *tracer.Infos, courseID int, email string) ([]domain.Ingress
 	solRepo := ingress.NewSolicitation()
 	return solRepo.GetRequestsToCourse(i, courseID, email)
 }
+
+func RemoveStudent(i *tracer.Infos, solicitationID int) error {
+	i.TraceIt("get students service")
+	defer i.Span.Finish()
+
+	solRepo := ingress.NewSolicitation()
+	return solRepo.DelRequestsToCourse(i, solicitationID)
+}

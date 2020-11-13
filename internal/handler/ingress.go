@@ -104,3 +104,21 @@ func GetCourseStudents(w http.ResponseWriter, r *http.Request) {
 
 	_, _ = w.Write(ret)
 }
+
+
+func DelCourseSolicitation(w http.ResponseWriter, r *http.Request) {
+	i := r.Context().Value(request.ContextKey).(*tracer.Infos)
+	i.TraceIt(spanName)
+	defer i.Span.Finish()
+
+	solicitationID, err := strconv.Atoi(mux.Vars(r)["solicitationID"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	err = ingress.RemoveStudent(i, solicitationID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}

@@ -28,6 +28,7 @@ func (s *Server) serve() {
 	s.Router.Path("/solicitations/{courseID}").HandlerFunc(request.PreRequest(handler.ListSolicitations)).Methods(http.MethodGet)
 	s.Router.Path("/accept").HandlerFunc(request.PreRequest(handler.AcceptSolicitation)).Methods(http.MethodPost)
 	s.Router.Path("/students/{courseID}").HandlerFunc(request.PreRequest(handler.GetCourseStudents)).Methods(http.MethodGet)
+	s.Router.Path("/remove/{solicitationID}").HandlerFunc(request.PreRequest(handler.DelCourseSolicitation)).Methods(http.MethodDelete)
 
 	//Get
 	s.Router.Path("/mine").HandlerFunc(request.PreRequest(handler.GetMyCourses)).Methods(http.MethodGet)

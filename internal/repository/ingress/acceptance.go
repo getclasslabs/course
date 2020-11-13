@@ -92,6 +92,8 @@ func (a *Acceptance) GetStudents(i *tracer.Infos, courseID int) ([]map[string]in
 	i.TraceIt(a.traceName)
 	defer i.Span.Finish()
 	q := "SELECT" +
+		"	r.course_ingress_solicitation_id as ingressId, " +
+		"	us.id, " +
 		"	us.nickname, " +
 		"	us.first_name as firstName, " +
 		"	us.last_name as lastName " +

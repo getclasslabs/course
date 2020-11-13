@@ -83,6 +83,24 @@ func (s *Solicitation) GetRequestsToCourse(i *tracer.Infos, courseID int, email 
 	return solicitations, nil
 }
 
+func (s *Solicitation) DelRequestsToCourse(i *tracer.Infos, solicitationID int) error {
+	i.TraceIt(s.traceName)
+	defer i.Span.Finish()
+
+	q := "DELETE " +
+		"FROM course_ingress_solicitation " +
+		"WHERE " +
+		"	id = ?"
+
+	_, err := s.db.Fetch(i, q, solicitationID)
+	if err != nil{
+		i.LogError(err)
+		return err
+	}
+
+	return nil
+}
+
 func mapper(data interface{}, to interface{}) error {
 	jsonResult, err := json.Marshal(data)
 	if err != nil {
