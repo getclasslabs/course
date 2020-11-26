@@ -11,6 +11,7 @@ services:
     volumes:
       - ./category_photos/:/category_photos/
       - ./course_photos/:/course_photos/
+      - ./receipt_photos/:/receipt_photos/
     networks:
       main:
         aliases:

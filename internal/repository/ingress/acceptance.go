@@ -24,10 +24,10 @@ func (a *Acceptance) Create(i *tracer.Infos, acceptance *domain.IngressAcceptanc
 	defer i.Span.Finish()
 
 	q := "INSERT INTO course_registration (student_id,course_id,course_ingress_solicitation_id) VALUES " +
-		"	((SELECT s.id FROM students s INNER JOIN users u ON u.id = s.user_id WHERE u.email = ?), ?, ?);"
+		"	(?, ?, ?);"
 
 	_, err := a.db.Insert(i, q,
-		acceptance.Email,
+		acceptance.StudentID,
 		acceptance.CourseID,
 		acceptance.IngressSolicitationID,
 	)
@@ -88,20 +88,23 @@ func (a *Acceptance) GetSolicitation(i *tracer.Infos, email string, courseID int
 	return false, nil
 }
 
-func (a *Acceptance) GetStudents(i *tracer.Infos, email string, courseID int) ([]map[string]interface{}, error) {
+func (a *Acceptance) GetStudents(i *tracer.Infos, courseID int) ([]map[string]interface{}, error) {
 	i.TraceIt(a.traceName)
 	defer i.Span.Finish()
 	q := "SELECT" +
-		"	r.student_id as studentID " +
+		"	r.course_ingress_solicitation_id as ingressId, " +
+		"	us.id, " +
+		"	us.nickname, " +
+		"	us.first_name as firstName, " +
+		"	us.last_name as lastName " +
 		"FROM course_registration r " +
-		"INNER JOIN course c ON c.id = r.course_id " +
-		"INNER JOIN teacher t ON t.id = c.teacher_id " +
-		"INNER JOIN users u ON u.id = t.user_id " +
+		"INNER JOIN students s ON r.student_id = s.id " +
+		"INNER JOIN users us ON s.user_id = us.id " +
 		"WHERE" +
 		"	course_id = ? AND " +
 		"	valid = true"
 
-	result, err := a.db.Fetch(i, q, courseID, email)
+	result, err := a.db.Fetch(i, q, courseID)
 
 	if err != nil {
 		i.LogError(err)

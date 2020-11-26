@@ -5,10 +5,10 @@ import (
 	"github.com/getclasslabs/go-tools/pkg/tracer"
 )
 
-func GetStudents(i *tracer.Infos, email string, courseID int) ([]map[string]interface{}, error) {
+func GetStudents(i *tracer.Infos, courseID int) ([]map[string]interface{}, error) {
 	i.TraceIt("get students service")
 	defer i.Span.Finish()
 
 	sRepo := ingress.NewAcceptance()
-	return sRepo.GetStudents(i, email, courseID)
+	return sRepo.GetStudents(i, courseID)
 }

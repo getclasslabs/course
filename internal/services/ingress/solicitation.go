@@ -28,7 +28,7 @@ func Request(i *tracer.Infos, solicitation *domain.IngressSolicitation) error {
 	}
 
 	solRepo := ingress.NewSolicitation()
-	err = solRepo.Create(i, solicitation.CourseID, solicitation.Email, solicitation.Text, imagePath)
+	err = solRepo.Create(i, solicitation.CourseID, solicitation.StudentId, solicitation.Text, imagePath)
 	if err != nil{
 		return err
 	}
@@ -38,10 +38,10 @@ func Request(i *tracer.Infos, solicitation *domain.IngressSolicitation) error {
 
 func saveReceipt(i *tracer.Infos, solicitation *domain.IngressSolicitation) (string, error) {
 	now := time.Now()      // current local time
-	cID := strconv.Itoa(solicitation.CourseID)
-	name := strconv.Itoa(int(now.Unix())) + "_" + solicitation.Email + "_" + cID + ".png"
+	cID := solicitation.CourseID
+	name := strconv.Itoa(int(now.Unix())) + "_" + solicitation.StudentId + "_" + cID + ".png"
 
-	receipt, err := os.Create("./user_photos/" + name)
+	receipt, err := os.Create("./receipt_photos/" + name)
 	if err != nil {
 		i.LogError(err)
 		return "", err
@@ -72,10 +72,18 @@ func saveReceipt(i *tracer.Infos, solicitation *domain.IngressSolicitation) (str
 	return name, nil
 }
 
-func ListRequests(i *tracer.Infos, courseID int, email string) ([]domain.IngressSolicitation, error) {
+func ListRequests(i *tracer.Infos, courseID int, email string) ([]domain.IngressSolicitationResponse, error) {
 	i.TraceIt("solicitation service")
 	defer i.Span.Finish()
 
 	solRepo := ingress.NewSolicitation()
 	return solRepo.GetRequestsToCourse(i, courseID, email)
+}
+
+func RemoveStudent(i *tracer.Infos, solicitationID int) error {
+	i.TraceIt("get students service")
+	defer i.Span.Finish()
+
+	solRepo := ingress.NewSolicitation()
+	return solRepo.DelRequestsToCourse(i, solicitationID)
 }

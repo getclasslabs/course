@@ -22,17 +22,22 @@ func Ingress(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`{"msg": "The image sent is bigger than 10mb"}`))
 	}
 
-	receipt, _, err := r.FormFile("receipt")
-
 	iDomain := domain.IngressSolicitation{}
-	err = json.NewDecoder(r.Body).Decode(&iDomain)
-	if err != nil && err.Error() != "EOF" {
+
+	receipt, _, err := r.FormFile("receipt")
+	if err != nil && err.Error() != "EOF" && err.Error() != "http: no such file" {
 		i.Span.SetTag("read", http.StatusBadRequest)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	iDomain.Image = receipt
+	if receipt != nil {
+		iDomain.Image = receipt
+	}
+
+	iDomain.StudentId = r.FormValue("studentID")
+	iDomain.CourseID = r.FormValue("courseID")
+	iDomain.Text = r.FormValue("text")
 
 	err = ingress.Request(i, &iDomain)
 	if err != nil{
@@ -84,14 +89,12 @@ func GetCourseStudents(w http.ResponseWriter, r *http.Request) {
 	i.TraceIt(spanName)
 	defer i.Span.Finish()
 
-	email := r.Header.Get("X-Consumer-Username")
-
 	courseID, err := strconv.Atoi(mux.Vars(r)["courseID"])
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 
-	students, err := ingress.GetStudents(i, email, courseID)
+	students, err := ingress.GetStudents(i, courseID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -100,4 +103,22 @@ func GetCourseStudents(w http.ResponseWriter, r *http.Request) {
 	ret, _ := json.Marshal(students)
 
 	_, _ = w.Write(ret)
+}
+
+
+func DelCourseSolicitation(w http.ResponseWriter, r *http.Request) {
+	i := r.Context().Value(request.ContextKey).(*tracer.Infos)
+	i.TraceIt(spanName)
+	defer i.Span.Finish()
+
+	solicitationID, err := strconv.Atoi(mux.Vars(r)["solicitationID"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	err = ingress.RemoveStudent(i, solicitationID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
